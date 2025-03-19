@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(uuid())
+  name            String
+  email           String?           @unique
+  password        String?
+  createdAt       DateTime          @default(now())
+  idNumber        String?
+  otpId           String?
+  photoUrl        String?
+  pieceType       PieceType?
+  role            Role              @default(USER)
+  isFirstLogin Boolean? @default(true)
+  accounts        Account[]
+  Booking         Booking[]
+  sessions        Session[]
+  transaction     Transaction[]
+  userPreferences UserPreferences[]
+  tillbalance     Tillbalance[]
+  activityLog     ActivityLog[]
+  passengerList   PassengerList[]
+  revokedTokens RevokedToken[]
+  otp OTP? @relation(fields: [otpId], references: [id])
+  @@unique([pieceType, idNumber])
+}
+model RevokedToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  revokedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([token])
+}
+model Trip {
+  id            String        @id @default(uuid())
+  departure     String
+  destination   String
+  date          DateTime
+  price         Float
+  Booking       Booking[]
+  transaction   Transaction[]
+  frequency     DayOfWeek[]
+  statusTrip    StatusTrip    @default(Active)
+  departureTime DateTime
+  TripBus       TripBus[] // Relation avec plusieurs bus
+  activityLogs   ActivityLog[]
+}
+
+model TripBus {
+  id            String    @id @default(uuid())
+  tripId        String
+  vehicleId     String
+  seatAvailable Int
+  createdAt     DateTime  @default(now())
+  trip          Trip      @relation(fields: [tripId], references: [id])
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  Booking       Booking[]
+  passengerList   PassengerList[]
+
+}
+model Ticket {
+  id           String        @id @default(uuid())
+  code         String        @unique
+  statusTicket TicketStatus  @default(Valid) // valid, used, expired
+  tickeNumber  Int?
+  createdAt    DateTime      @default(now())
+  validatedAt  DateTime?
+  Booking      Booking[]
+  passengerList   PassengerList[]
+  activityLogs ActivityLog[]
+}
+enum TicketStatus {
+  Valid
+  Used
+  Expired
+}
+model PassengerList {
+  id          String   @id @default(uuid())
+  tripBusId   String
+  userId      String?
+  ticketId    String?
+  sessionId String // Session id
+  status      PassengerStatus @default(CheckedIn) // CheckedIn, Expelled
+  createdAt   DateTime @default(now())
+
+  user        User?     @relation(fields: [userId], references: [id])
+  ticket      Ticket?   @relation(fields: [ticketId], references: [id])
+  tripBus     TripBus   @relation(fields: [tripBusId], references: [id])
+}
+enum PassengerStatus {
+  CheckedIn
+  NoTicket
+  Expelled
+}
+model Vehicle {
+  id                 String        @id @default(uuid())
+  registrationNumber String
+  seatVehicle        Int
+  statusVehicle      StatusVehicle @default(Available)
+  TripBus            TripBus[]
+}
+model Session {
+  id           String        @id @default(cuid())
+  sessionToken String        @unique
+  userId       String
+  expires      DateTime
+  startedAt    DateTime?
+  endedAt      DateTime?
+  status       SessionStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @default(now()) @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id])
+  activityLogs ActivityLog[]
+}
+
+enum SessionStatus {
+  INACTIVE
+  ACTIVE
+  EXPIRED
+  ENDED
+}
+model ActivityLog {
+  id            String      @id @default(uuid())
+  userId        String
+  sessionId     String?
+  transactionId String?
+  bookingId     String?
+  ticketId      String?
+  tripId      String?
+  action        String
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id])
+  session       Session?     @relation(fields: [sessionId], references: [id])
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  booking       Booking?     @relation(fields: [bookingId], references: [id])
+  ticket        Ticket?      @relation(fields: [ticketId], references: [id])
+  trip        Trip?      @relation(fields: [tripId], references: [id])
+
+}
+model OTP {
+  id          String   @id @default(uuid())
+  phoneNumber String
+  code        String
+  expiresAt   DateTime
+  user        User[]
+}
+model Booking {
+  id            String        @id @default(uuid())
+  userId        String
+  tripId        String
+  transactionId String
+  tripBusId     String // Bus assigné automatiquement
+  ticketId      String
+  name          String?
+  phoneNumber   String?
+  seatsBooking  Int
+  status        Status        @default(pending)
+  createdAt     DateTime      @default(now())
+  trip          Trip          @relation(fields: [tripId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  transaction   Transaction   @relation(fields: [transactionId], references: [id])
+  tripBus       TripBus       @relation(fields: [tripBusId], references: [id])
+  ticket        Ticket        @relation(fields: [ticketId], references: [id])
+  activityLogs  ActivityLog[]
+}
+
+model Transaction {
+  id             String        @id @default(uuid())
+  userId         String
+  tripId         String
+  Amount         Float
+  requestedSeats Int
+  transactionId  String
+  methodePay     Methode       @default(WAVE)
+  createdAt      DateTime      @default(now())
+  trip           Trip          @relation(fields: [tripId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  booking        Booking[]
+  tillbalance    Tillbalance[]
+  activityLogs   ActivityLog[]
+}
+
+model Tillbalance {
+  id                String   @id @default(uuid())
+  tillBalanceAmount Float
+  transactionId     String
+  userId            String // Ajout pour savoir quel vendeur gère la caisse
+  createdAt         DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model SearchSeatsTemporary {
+  id             String   @id @default(uuid())
+  requestedSeats String
+  expiresAt      DateTime
+}
+
+model UserPreferences {
+  id               String                @id @default(uuid())
+  userId           String                @unique
+  notifications    UserPreferencesStatus @default(Activer) // Activer/Désactiver les notifications   status        Status      @default(pending)
+  preferredPayment String? // Mobile Money, Carte, etc.
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  userId    String
+  apiKey    String?  @unique
+  tenantId  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  cities    City[]   @relation("CountryCities")
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  name      String
+  countryId Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  country   Country   @relation("CountryCities", fields: [countryId], references: [id])
+  networks  Network[] @relation("CityNetworks")
+}
+
+model Network {
+  id        Int        @id @default(autoincrement())
+  name      String
+  cityId    Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  groups    Group[]    @relation("NetworkGroups")
+  city      City       @relation("CityNetworks", fields: [cityId], references: [id])
+  operators Operator[] @relation("NetworkOperators")
+}
+
+model Group {
+  id        Int        @id @default(autoincrement())
+  name      String
+  networkId Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  network   Network    @relation("NetworkGroups", fields: [networkId], references: [id])
+  operators Operator[] @relation("GroupOperators")
+}
+
+model Operator {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  networkId Int
+  groupId   Int?
+  tenantId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  group     Group?   @relation("GroupOperators", fields: [groupId], references: [id])
+  network   Network  @relation("NetworkOperators", fields: [networkId], references: [id])
+}
+
+enum PieceType {
+  CNI
+  PASSPORT
+}
+
+enum Role {
+  CONTROLLER
+  CAISSIER
+  USER
+  OPERATEUR
+  ADMIN
+}
+
+enum Status {
+  pending
+  confirmed
+  cancelled
+}
+
+enum StatusVehicle {
+  Available
+  Under_maintenance
+  Occupied
+}
+
+enum StatusTrip {
+  Active
+  Inactive
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum Methode {
+  OM
+  WAVE
+}
+
+
+enum UserPreferencesStatus {
+  Activer
+  Desactiver
+}

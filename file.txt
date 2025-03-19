@@ -1,0 +1,80 @@
+📁 backofficepassbi/
+│
+├── 📁 src/                      # Dossier principal du code source
+│   ├── 📁 modules/              # Organisation modulaire par domaine fonctionnel
+│   │   ├── 📁 auth/             # Module d'authentification
+│   │   │   ├── 📁 api/          # API routes pour l'authentification
+│   │   │   ├── 📁 components/   # Composants spécifiques à l'authentification
+│   │   │   ├── 📁 hooks/        # Hooks custom pour l'authentification
+│   │   │   ├── 📁 services/     # Services liés à l'authentification
+│   │   │   ├── 📁 types/        # Types TypeScript pour l'authentification
+│   │   │   └── 📁 utils/        # Utilitaires pour l'authentification
+│   │   │
+│   │   ├── 📁 users/            # Module de gestion des utilisateurs
+│   │   │   ├── 📁 api/
+│   │   │   ├── 📁 components/
+│   │   │   ├── 📁 hooks/
+│   │   │   ├── 📁 services/
+│   │   │   ├── 📁 types/
+│   │   │   └── 📁 utils/
+│   │   │
+│   │   └── 📁 [other-modules]/  # Autres modules fonctionnels
+│   │
+│   ├── 📁 core/                 # Éléments partagés entre tous les modules
+│   │   ├── 📁 api/              # Logique API partagée
+│   │   │   ├── middleware.ts    # Middleware global
+│   │   │   └── api-client.ts    # Client API configuré
+│   │   │
+│   │   ├── 📁 components/       # Composants UI partagés
+│   │   │   ├── 📁 layout/       # Composants de mise en page
+│   │   │   ├── 📁 ui/           # Composants UI atomiques
+│   │   │   └── 📁 modals/       # Composants de modals
+│   │   │
+│   │   ├── 📁 hooks/            # Hooks React partagés
+│   │   ├── 📁 services/         # Services partagés
+│   │   ├── 📁 types/            # Types globaux partagés
+│   │   ├── 📁 utils/            # Utilitaires partagés
+│   │   └── 📁 constants/        # Constantes partagées
+│   │
+│   ├── 📁 pages/                # Pages Next.js (structure standard)
+│   │   ├── 📁 api/              # Routes API Next.js
+│   │   ├── 📁 auth/             # Pages d'authentification
+│   │   ├── 📁 users/            # Pages des utilisateurs
+│   │   ├── _app.tsx             # Composant App principal
+│   │   └── index.tsx            # Page d'accueil
+│   │
+│   ├── 📁 styles/               # Styles globaux
+│   │   ├── globals.css          # CSS global
+│   │   └── theme.ts             # Configuration du thème
+│   │
+│   ├── 📁 config/               # Configuration de l'application
+│   │   ├── env.ts               # Variables d'environnement typées
+│   │   └── app-config.ts        # Configuration de l'application
+│   │
+│   └── 📁 lib/                  # Bibliothèques tierces et wrappers
+│       ├── 📁 database/         # Configuration de la base de données
+│       └── 📁 clients/          # Clients pour services externes
+│
+├── 📁 public/                   # Fichiers statiques
+│
+├── 📁 docs/                     # Documentation du projet
+│   ├── 📁 architecture/         # Documentation de l'architecture
+│   ├── 📁 api/                  # Documentation de l'API
+│   └── 📁 components/           # Documentation des composants
+│
+├── 📁 tests/                    # Tests séparés par type
+│   ├── 📁 unit/                 # Tests unitaires
+│   ├── 📁 integration/          # Tests d'intégration
+│   └── 📁 e2e/                  # Tests end-to-end
+│
+├── 📁 scripts/                  # Scripts utilitaires
+│
+├── .env.local                   # Variables d'environnement locales
+├── .env.development             # Variables d'environnement de développement
+├── .env.production              # Variables d'environnement de production
+├── .eslintrc.js                 # Configuration ESLint
+├── .prettierrc                  # Configuration Prettier
+├── tsconfig.json                # Configuration TypeScript
+├── next.config.js               # Configuration Next.js
+├── package.json                 # Dépendances et scripts
+└── README.md                    # Documentation principale
