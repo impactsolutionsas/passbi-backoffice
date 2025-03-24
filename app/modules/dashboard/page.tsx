@@ -647,20 +647,23 @@ const DashboardContent = () => {
     };
     
     // Filtrer les données en fonction du terme de recherche
-    const filteredUsers = users.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    const filteredVehicles = vehicles.filter(vehicle => 
-        vehicle.immatriculation.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        vehicle.marque.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    const filteredTrips = trips.filter(trip => 
-        trip.depart.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        trip.destination.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(user => {
+        const nameMatch = user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const emailMatch = user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        return nameMatch || emailMatch;
+      });
+      
+      const filteredVehicles = vehicles.filter(vehicle => {
+        const immatMatch = vehicle.immatriculation && vehicle.immatriculation.toLowerCase().includes(searchTerm.toLowerCase());
+        const marqueMatch = vehicle.marque && vehicle.marque.toLowerCase().includes(searchTerm.toLowerCase());
+        return immatMatch || marqueMatch;
+      });
+      
+      const filteredTrips = trips.filter(trip => {
+        const departMatch = trip.depart && trip.depart.toLowerCase().includes(searchTerm.toLowerCase());
+        const destinationMatch = trip.destination && trip.destination.toLowerCase().includes(searchTerm.toLowerCase());
+        return departMatch || destinationMatch;
+      });
     
     // Composant pour afficher une page d'erreur
     const ErrorPage = () => (

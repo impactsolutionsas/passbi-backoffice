@@ -1,71 +1,82 @@
 'use client';
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, Vehicle, Trip, Stats, DashboardContextType } from '../types';
+import { Vehicle, Trip, Stats, DashboardContextType, UserWithId as TypedUserWithId } from '../types';
+import { useUser } from '../components/features/users/hooks/useUser';
 
 const defaultStats: Stats = {
-    utilisateurs: { total: 97, augmentation: '5%' },
-    vehicules: { total: 42, augmentation: '12%' },
-    trajets: { total: 156, augmentation: '7%' },
-    nouveauxUtilisateurs: { total: 24, augmentation: '15%' }
+    utilisateurs: { total: 0, augmentation: '0%' },
+    vehicules: { total: 0, augmentation: '0%' },
+    trajets: { total: 0, augmentation: '0%' },
+    nouveauxUtilisateurs: { total: 0, augmentation: '0%' }
 };
 
+// Contexte avec les propriétés nécessaires (sans redéfinir UserWithId)
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [activeTab, setActiveTab] = useState('accueil');
-    const [users, setUsers] = useState<User[]>([]);
+    const { users, setUsers, fetchUsers } = useUser();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [trips, setTrips] = useState<Trip[]>([]);
-    const [stats] = useState<Stats>(defaultStats);
+    const [stats, setStats] = useState<Stats>(defaultStats);
     const [searchTerm, setSearchTerm] = useState('');
     const [showUserForm, setShowUserForm] = useState(false);
     const [showVehicleForm, setShowVehicleForm] = useState(false);
     const [showTripForm, setShowTripForm] = useState(false);
 
-    // Simuler le chargement des données
+    // Charger les données initiales
     useEffect(() => {
-        // Données utilisateurs simulées
-        setUsers([
-            { id: '1', name: 'Mohamed Diallo', email: 'mohamed@example.com', role: 'Conducteur', createdAt: '2025-02-15' },
-            { id: '2', name: 'Fatou Diop', email: 'fatou@example.com', role: 'Opérateur', createdAt: '2025-02-18' },
-            { id: '3', name: 'Amadou Sow', email: 'amadou@example.com', role: 'Contrôleur', createdAt: '2025-02-20' },
-            { id: '4', name: 'Aïcha Ndiaye', email: 'aicha@example.com', role: 'Caissier', createdAt: '2025-03-01' },
-            { id: '5', name: 'Omar Bah', email: 'omar@example.com', role: 'Admin', createdAt: '2025-03-05' }
-        ]);
+        fetchUsers();
+        
+        // Chargez vos données à partir d'une API ici pour les véhicules et les trajets
+        // Exemple: fetchVehicles().then(data => setVehicles(data));
+    }, [fetchUsers]);
 
-        // Données véhicules simulées
-        setVehicles([
-            { id: '1', immatriculation: 'DK-1234-AB', marque: 'Toyota', modele: 'Hiace', capacite: 18, status: 'disponible' },
-            { id: '2', immatriculation: 'DK-5678-CD', marque: 'Mercedes', modele: 'Sprinter', capacite: 22, status: 'en service' },
-            { id: '3', immatriculation: 'DK-9012-EF', marque: 'Renault', modele: 'Master', capacite: 15, status: 'maintenance' }
-        ]);
+    // Mettre à jour les statistiques en fonction des données
+    useEffect(() => {
+        setStats({
+            utilisateurs: { 
+                total: users.length, 
+                augmentation: users.length > 0 ? '5%' : '0%' 
+            },
+            vehicules: { 
+                total: vehicles.length, 
+                augmentation: vehicles.length > 0 ? '12%' : '0%' 
+            },
+            trajets: { 
+                total: trips.length, 
+                augmentation: trips.length > 0 ? '7%' : '0%' 
+            },
+            nouveauxUtilisateurs: { 
+                total: Math.floor(users.length * 0.25), 
+                augmentation: users.length > 0 ? '15%' : '0%' 
+            }
+        });
+    }, [users, vehicles, trips]);
 
-        // Données trajets simulées
-        setTrips([
-            { id: '1', depart: 'Dakar', destination: 'Saint-Louis', date: '2025-03-15', vehiculeId: '1', chauffeurId: '1', status: 'planifié' },
-            { id: '2', depart: 'Thiès', destination: 'Mbour', date: '2025-03-16', vehiculeId: '2', chauffeurId: '1', status: 'en cours' },
-            { id: '3', depart: 'Dakar', destination: 'Touba', date: '2025-03-14', vehiculeId: '3', chauffeurId: '2', status: 'terminé' }
-        ]);
-    }, []);
-
+    // Valeur du contexte
+    const contextValue: DashboardContextType = {
+        activeTab,
+        setActiveTab,
+        users,
+        setUsers,
+        vehicles,
+        setVehicles,
+        trips,
+        setTrips,
+        stats,
+        searchTerm,
+        setSearchTerm,
+        showUserForm,
+        setShowUserForm,
+        showVehicleForm,
+        setShowVehicleForm,
+        showTripForm,
+        setShowTripForm
+    };
     return (
-        <DashboardContext.Provider value={{
-            activeTab,
-            setActiveTab,
-            users,
-            vehicles,
-            trips,
-            stats,
-            searchTerm,
-            setSearchTerm,
-            showUserForm,
-            setShowUserForm,
-            showVehicleForm,
-            setShowVehicleForm,
-            showTripForm,
-            setShowTripForm
-        }}>
+        <DashboardContext.Provider value={contextValue}>
             {children}
         </DashboardContext.Provider>
     );

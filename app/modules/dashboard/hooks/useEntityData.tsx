@@ -1,9 +1,9 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { User, Vehicle, Trip, Stats } from '../types';
+import {  Vehicle, Trip, Stats } from '../types';
+import { RegisterUserDTO } from '../../auth/types/auth.types';
 
-// Exportations nommées existantes
-export function useFilteredUsers(users: User[], searchTerm: string) {
+export function useFilteredUsers(users: RegisterUserDTO[], searchTerm: string) {
   return useMemo(() => {
     return users.filter(user => 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -31,7 +31,7 @@ export function useFilteredTrips(trips: Trip[], searchTerm: string) {
 }
 
 // Données simulées pour l'exemple
-const mockUsers: User[] = [
+const mockUsers: RegisterUserDTO[] = [
   // Ajoutez quelques utilisateurs d'exemple ici
 ];
 

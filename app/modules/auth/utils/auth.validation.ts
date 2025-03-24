@@ -26,7 +26,21 @@ export const registerSchema = z.object({
   message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"],
 });
-
+// Schéma pour la mise à jour d'un utilisateur (tous les champs sont optionnels)
+export const updateUserSchema = z.object({
+  name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères' }).optional(),
+  email: z.string().email({ message: 'Email invalide' }).optional(),
+  role: z.nativeEnum(Role, {
+    errorMap: () => ({ message: 'Rôle non valide' }),
+  }).optional(),
+  password: z.string().min(6, { message: 'Le mot de passe doit comporter au moins 6 caractères' }).optional(),
+  pieceType: z.nativeEnum(PieceType, {
+    errorMap: () => ({ message: 'Type de pièce non valide' }),
+  }).optional(),
+  idNumber: z.string().optional(),
+  photoUrl: z.string().url({ message: 'URL de photo invalide' }).optional(),
+  isFirstLogin: z.boolean().optional(),
+});
 // Schéma de validation pour la connexion
 export const loginSchema = z.object({
   email: z.string().email({ message: "Format d'email invalide" }),
