@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verify } from 'jsonwebtoken';
-import { prisma } from '@/app/lib/database/prisma';
 import { UserService } from '@/app/modules/dashboard/components/features/users/services/UserService';
 
 /**

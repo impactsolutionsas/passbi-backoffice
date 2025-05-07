@@ -44,7 +44,6 @@ export const UserService = {
         }
       },
 
-    // Récupérer un utilisateur par ID
  // Récupérer un utilisateur par ID
  getUserById: async (id: string) => {
     try {

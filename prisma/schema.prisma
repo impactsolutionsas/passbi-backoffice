@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -17,98 +18,114 @@ model User {
   otpId           String?
   photoUrl        String?
   pieceType       PieceType?
+  operatorId      String?
   role            Role              @default(USER)
-  isFirstLogin Boolean? @default(true)
-  accounts        Account[]
-  Booking         Booking[]
-  sessions        Session[]
-  transaction     Transaction[]
-  userPreferences UserPreferences[]
-  tillbalance     Tillbalance[]
+  isFirstLogin    Boolean?          @default(true)
+  firstName       String?
   activityLog     ActivityLog[]
+  agent           Agent?
+  Booking         Booking[]
+  bookingIsUrbain BookingIsUrbain[]
   passengerList   PassengerList[]
-  revokedTokens RevokedToken[]
-  otp OTP? @relation(fields: [otpId], references: [id])
+  revokedTokens   RevokedToken[]
+  sessions        Session[]
+  tillbalance     Tillbalance[]
+  transaction     Transaction[]
+  passengerBooking PassengerBooking[]
+  operateur       Operator?         @relation(fields: [operatorId], references: [id])
+  otp             OTP?              @relation(fields: [otpId], references: [id])
+  userPreferences UserPreferences?
+
   @@unique([pieceType, idNumber])
 }
+
 model RevokedToken {
   id        String   @id @default(uuid())
   userId    String
   token     String   @unique
   revokedAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([token])
 }
+
 model Trip {
   id            String        @id @default(uuid())
   departure     String
   destination   String
   date          DateTime
   price         Float
-  Booking       Booking[]
-  transaction   Transaction[]
   frequency     DayOfWeek[]
+  operatorId    String
   statusTrip    StatusTrip    @default(Active)
   departureTime DateTime
-  TripBus       TripBus[] // Relation avec plusieurs bus
-  activityLogs   ActivityLog[]
+  activityLogs  ActivityLog[]
+  Booking       Booking[]
+  transaction   Transaction[]
+  operateur     Operator      @relation(fields: [operatorId], references: [id])
+  TripBus       TripBus[]
+  tripStations  TripStation[]
 }
 
 model TripBus {
-  id            String    @id @default(uuid())
+  id            String          @id @default(uuid())
   tripId        String
   vehicleId     String
   seatAvailable Int
-  createdAt     DateTime  @default(now())
-  trip          Trip      @relation(fields: [tripId], references: [id])
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  createdAt     DateTime        @default(now())
   Booking       Booking[]
-  passengerList   PassengerList[]
-
+  passengerList PassengerList[]
+  trip          Trip            @relation(fields: [tripId], references: [id])
+  vehicle       Vehicle         @relation(fields: [vehicleId], references: [id])
 }
+
 model Ticket {
-  id           String        @id @default(uuid())
-  code         String        @unique
-  statusTicket TicketStatus  @default(Valid) // valid, used, expired
-  tickeNumber  Int?
-  createdAt    DateTime      @default(now())
-  validatedAt  DateTime?
-  Booking      Booking[]
-  passengerList   PassengerList[]
-  activityLogs ActivityLog[]
+  id               String            @id @default(uuid())
+  code             String            @unique @default(uuid())
+  statusTicket     TicketStatus      @default(Valid)
+  tickeNumber      Json?
+  createdAt        DateTime          @default(now())
+  validatedAt      DateTime?
+  amount           Float?
+  arrivalId        String?
+  departureId      String?
+  expiresAt        DateTime?
+  operatorId       String?
+  zoneType         ZoneType?
+  pendingExpiresAt DateTime?
+  activityLogs     ActivityLog[]
+  Booking          Booking[]
+  bookingIsUrbain  BookingIsUrbain[]
+  passengerList    PassengerList[]
+  arrivalStation   StationBRT?       @relation("ArrivalStation", fields: [arrivalId], references: [id])
+  departureStation StationBRT?       @relation("DepartureStation", fields: [departureId], references: [id])
+  operator         Operator?         @relation(fields: [operatorId], references: [id])
 }
-enum TicketStatus {
-  Valid
-  Used
-  Expired
-}
-model PassengerList {
-  id          String   @id @default(uuid())
-  tripBusId   String
-  userId      String?
-  ticketId    String?
-  sessionId String // Session id
-  status      PassengerStatus @default(CheckedIn) // CheckedIn, Expelled
-  createdAt   DateTime @default(now())
 
-  user        User?     @relation(fields: [userId], references: [id])
-  ticket      Ticket?   @relation(fields: [ticketId], references: [id])
-  tripBus     TripBus   @relation(fields: [tripBusId], references: [id])
+model PassengerList {
+  id        String          @id @default(uuid())
+  tripBusId String
+  userId    String?
+  ticketId  String?
+  sessionId String
+  status    PassengerStatus @default(CheckedIn)
+  createdAt DateTime        @default(now())
+  ticket    Ticket?         @relation(fields: [ticketId], references: [id])
+  tripBus   TripBus         @relation(fields: [tripBusId], references: [id])
+  user      User?           @relation(fields: [userId], references: [id])
 }
-enum PassengerStatus {
-  CheckedIn
-  NoTicket
-  Expelled
-}
+
 model Vehicle {
   id                 String        @id @default(uuid())
   registrationNumber String
+  operatorId         String
   seatVehicle        Int
   statusVehicle      StatusVehicle @default(Available)
   TripBus            TripBus[]
+  operateur          Operator      @relation(fields: [operatorId], references: [id])
 }
+
 model Session {
   id           String        @id @default(cuid())
   sessionToken String        @unique
@@ -119,34 +136,28 @@ model Session {
   status       SessionStatus @default(ACTIVE)
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @default(now()) @map("updated_at")
-  user         User          @relation(fields: [userId], references: [id])
   activityLogs ActivityLog[]
+  user         User          @relation(fields: [userId], references: [id])
 }
 
-enum SessionStatus {
-  INACTIVE
-  ACTIVE
-  EXPIRED
-  ENDED
-}
 model ActivityLog {
-  id            String      @id @default(uuid())
+  id            String       @id @default(uuid())
   userId        String
   sessionId     String?
   transactionId String?
   bookingId     String?
   ticketId      String?
-  tripId      String?
+  tripId        String?
   action        String
-  createdAt     DateTime    @default(now())
-  user          User        @relation(fields: [userId], references: [id])
-  session       Session?     @relation(fields: [sessionId], references: [id])
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  createdAt     DateTime     @default(now())
   booking       Booking?     @relation(fields: [bookingId], references: [id])
+  session       Session?     @relation(fields: [sessionId], references: [id])
   ticket        Ticket?      @relation(fields: [ticketId], references: [id])
-  trip        Trip?      @relation(fields: [tripId], references: [id])
-
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  trip          Trip?        @relation(fields: [tripId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
 }
+
 model OTP {
   id          String   @id @default(uuid())
   phoneNumber String
@@ -154,51 +165,78 @@ model OTP {
   expiresAt   DateTime
   user        User[]
 }
+
 model Booking {
   id            String        @id @default(uuid())
   userId        String
   tripId        String
   transactionId String
-  tripBusId     String // Bus assigné automatiquement
+  tripBusId     String
   ticketId      String
   name          String?
   phoneNumber   String?
   seatsBooking  Int
   status        Status        @default(pending)
   createdAt     DateTime      @default(now())
-  trip          Trip          @relation(fields: [tripId], references: [id])
-  user          User          @relation(fields: [userId], references: [id])
+  activityLogs  ActivityLog[]
+  passengerBooking  PassengerBooking[]   
+  ticket        Ticket        @relation(fields: [ticketId], references: [id])
   transaction   Transaction   @relation(fields: [transactionId], references: [id])
   tripBus       TripBus       @relation(fields: [tripBusId], references: [id])
-  ticket        Ticket        @relation(fields: [ticketId], references: [id])
-  activityLogs  ActivityLog[]
+  trip          Trip          @relation(fields: [tripId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model BookingIsUrbain {
+  id            String      @id @default(uuid())
+  userId        String
+  transactionId String
+  ticketId      String
+  ticket        Ticket      @relation(fields: [ticketId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+}
+model PassengerBooking {
+  id          String   @id @default(uuid())
+  bookingId   String
+  userId      String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  user     User  @relation(fields: [userId], references: [id])
+
+  name        String
+  phoneNumber String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Transaction {
-  id             String        @id @default(uuid())
-  userId         String
-  tripId         String
-  Amount         Float
-  requestedSeats Int
-  transactionId  String
-  methodePay     Methode       @default(WAVE)
-  createdAt      DateTime      @default(now())
-  trip           Trip          @relation(fields: [tripId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
-  booking        Booking[]
-  tillbalance    Tillbalance[]
-  activityLogs   ActivityLog[]
+  id              String            @id @default(uuid())
+  userId          String
+  tripId          String?
+  operatorId      String?
+  Amount          Float
+  requestedSeats  Int?
+  transactionId   String
+  methodePay      Methode           @default(WAVE)
+  createdAt       DateTime          @default(now())
+  fees            Float             @default(0)
+  activityLogs    ActivityLog[]
+  booking         Booking[]
+  bookingIsUrbain BookingIsUrbain[]
+  tillbalance     Tillbalance[]
+  operateur       Operator?         @relation(fields: [operatorId], references: [id])
+  trip            Trip?             @relation(fields: [tripId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
 }
 
 model Tillbalance {
-  id                String   @id @default(uuid())
+  id                String      @id @default(uuid())
   tillBalanceAmount Float
   transactionId     String
-  userId            String // Ajout pour savoir quel vendeur gère la caisse
-  createdAt         DateTime @default(now())
-
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-  user        User        @relation(fields: [userId], references: [id])
+  userId            String
+  createdAt         DateTime    @default(now())
+  transaction       Transaction @relation(fields: [transactionId], references: [id])
+  user              User        @relation(fields: [userId], references: [id])
 }
 
 model SearchSeatsTemporary {
@@ -210,73 +248,240 @@ model SearchSeatsTemporary {
 model UserPreferences {
   id               String                @id @default(uuid())
   userId           String                @unique
-  notifications    UserPreferencesStatus @default(Activer) // Activer/Désactiver les notifications   status        Status      @default(pending)
-  preferredPayment String? // Mobile Money, Carte, etc.
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-model Account {
-  id        String   @id @default(cuid())
-  userId    String
-  apiKey    String?  @unique
-  tenantId  String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id])
-}
-
-model Country {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  cities    City[]   @relation("CountryCities")
-}
-
-model City {
-  id        Int       @id @default(autoincrement())
-  name      String
-  countryId Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  country   Country   @relation("CountryCities", fields: [countryId], references: [id])
-  networks  Network[] @relation("CityNetworks")
-}
-
-model Network {
-  id        Int        @id @default(autoincrement())
-  name      String
-  cityId    Int
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @default(now())
-  groups    Group[]    @relation("NetworkGroups")
-  city      City       @relation("CityNetworks", fields: [cityId], references: [id])
-  operators Operator[] @relation("NetworkOperators")
-}
-
-model Group {
-  id        Int        @id @default(autoincrement())
-  name      String
-  networkId Int
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @default(now())
-  network   Network    @relation("NetworkGroups", fields: [networkId], references: [id])
-  operators Operator[] @relation("GroupOperators")
+  notifications    UserPreferencesStatus @default(Activer)
+  preferredPayment String?
+  user             User                  @relation(fields: [userId], references: [id])
 }
 
 model Operator {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  phone     String
-  networkId Int
-  groupId   Int?
-  tenantId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  group     Group?   @relation("GroupOperators", fields: [groupId], references: [id])
-  network   Network  @relation("NetworkOperators", fields: [networkId], references: [id])
+  id                    String                  @id @default(uuid())
+  name                  String
+  legalName             String?
+  email                 String                  @unique
+  phone                 String?
+  countryId             String
+  ticketValidity        String?
+  logoUrl               String?
+  status                OperatorStatus          @default(ACTIVE)
+  transportType        TransportType      @default(BUS)
+  isUrbainStatus        Boolean                 @default(false)
+  estClasse              Boolean                  @default(false)  // Indique si l'opérateur utilise un système de classes
+  createdAt             DateTime                @default(now())
+  lineId                String?
+  commissionOperator    Float?
+  commissionPassenger   Float?
+  commissionTotal       Float?
+  agents                Agent[]
+  commission            CommissionConfig?
+  commissionTransaction CommissionTransaction[]
+  country               Country                 @relation(fields: [countryId], references: [id])
+  line                  Line?                    @relation(fields: [lineId], references: [id])
+  operatorTransportMode OperatorTransportMode[]
+  tickets               Ticket[]
+  transactions          Transaction[]
+  trip                  Trip[]
+  users                 User[]
+  vehicles              Vehicle[]
+  tarifClasse           TarifClasse[]
+}
+
+model Zone {
+  id         String       @id @default(uuid())
+  name       String       @unique
+  lineZones  LineZone[]
+  stationBRT StationBRT[]
+}
+
+model Line {
+  id          String     @id @default(uuid())
+  name         String?
+  departure   String
+  destination String
+  tarifBaseId String?     // Tarif standard (non-classe)
+  tarifBase   Tarif?      @relation(fields: [tarifBaseId], references: [id])
+  lineZones   LineZone[]
+  operator    Operator[]
+}
+
+model LineZone {
+  id     String @id @default(uuid())
+  lineId String
+  zoneId String
+  line   Line   @relation(fields: [lineId], references: [id])
+  zone   Zone   @relation(fields: [zoneId], references: [id])
+
+  @@unique([lineId, zoneId])
+}
+
+model StationBRT {
+  id               String   @id @default(uuid())
+  name             String
+  zoneId           String
+  zone             Zone     @relation(fields: [zoneId], references: [id])
+  arrivalTickets   Ticket[] @relation("ArrivalStation")
+  departureTickets Ticket[] @relation("DepartureStation")
+}
+
+model Tarif {
+  id    String @id @default(uuid())
+  name  String
+  price Float
+  lines Line[]
+}
+model TarifClasse {
+  id          String    @id @default(uuid())
+  operatorId String
+  classe      TypeClasse @default(Classe_2)       // 1 ou 2
+  nbZones     Int       // 1, 2 ou 3 selon le nombre de zones traversées
+  zonesIds    String?   // Format: "zone1Id,zone2Id,..." pour combinaisons spécifiques (optionnel)
+  description String    // Ex: "Zone 1 ou Zone 2", "Zone 1 + Zone 2", etc.
+  prix        Float
+  operateur   Operator @relation(fields: [operatorId], references: [id])
+}
+model Country {
+  id            String        @id @default(uuid())
+  name          String
+  code          String        @unique
+  currency      String
+  statusCountry StatusCountry @default(Available)
+  operators     Operator[]
+}
+
+model Agent {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  operatorId String
+  createdAt  DateTime @default(now())
+  operator   Operator @relation(fields: [operatorId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model TransportMode {
+  id        String                  @id @default(uuid())
+  label     String
+  operators OperatorTransportMode[]
+}
+
+model OperatorTransportMode {
+  id              String        @id @default(uuid())
+  operatorId      String
+  transportModeId String
+  operator        Operator      @relation(fields: [operatorId], references: [id])
+  transportMode   TransportMode @relation(fields: [transportModeId], references: [id])
+
+  @@unique([operatorId, transportModeId])
+}
+
+model CommissionConfig {
+  id           String           @id @default(uuid())
+  operatorId   String           @unique
+  percentage   Float
+  applicableTo CommissionTarget
+  createdAt    DateTime         @default(now())
+  operator     Operator         @relation(fields: [operatorId], references: [id])
+}
+
+model CommissionTransaction {
+  id         String           @id @default(uuid())
+  operatorId String
+  ticketId   String
+  amount     Float
+  status     CommissionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  operator   Operator         @relation(fields: [operatorId], references: [id])
+}
+
+model Station {
+  id       String        @id @default(uuid())
+  name     String
+  code     String?       @unique
+  type     StationType
+  location Json
+  trip     TripStation[]
+}
+
+model TripStation {
+  id        String  @id @default(uuid())
+  tripId    String
+  stationId String
+  order     Int
+  station   Station @relation(fields: [stationId], references: [id])
+  trip      Trip    @relation(fields: [tripId], references: [id])
+
+  @@unique([tripId, stationId])
+}
+enum TransportType {
+  BUS
+  BOAT
+  TRAIN
+  PLANE
+}
+enum TypeClasse {
+  Classe_1
+  Classe_2
+}
+
+enum TicketStatus {
+  Valid
+  Used
+  Expired
+  cancelled
+  Refunded
+  Pending
+}
+
+enum ZoneType {
+  SAME_ZONE
+  DIFFERENT_ZONES
+}
+
+enum PassengerStatus {
+  CheckedIn
+  NoTicket
+  Expelled
+}
+
+enum SessionStatus {
+  INACTIVE
+  ACTIVE
+  EXPIRED
+  ENDED
+}
+
+enum OperatorStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum StatusCountry {
+  Available
+  Unvaible
+}
+
+enum CommissionTarget {
+  OPERATOR
+  TRAVELLER
+}
+
+enum CommissionStatus {
+  PENDING
+  SETTLED
+}
+
+enum StationType {
+  AIRPORT
+  PORT
+  BUS_TERMINAL
+  TRAIN_STATION
+  CITY_STOP
+}
+
+enum VehicleType {
+  BUS
+  BOAT
+  TRAIN
+  PLANE
 }
 
 enum PieceType {
@@ -296,6 +501,7 @@ enum Status {
   pending
   confirmed
   cancelled
+  Failed
 }
 
 enum StatusVehicle {
@@ -322,8 +528,9 @@ enum DayOfWeek {
 enum Methode {
   OM
   WAVE
+  CARD
+  CASH
 }
-
 
 enum UserPreferencesStatus {
   Activer

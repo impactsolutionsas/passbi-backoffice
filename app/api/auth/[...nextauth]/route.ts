@@ -2,8 +2,6 @@ import NextAuth from 'next-auth';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authService } from '@/app/modules/auth/services/auth.service';
-// Suppression de l'import PrismaAdapter
-// import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '../../../lib/database/prisma';
 import { Role } from '@prisma/client';
 

@@ -2,56 +2,56 @@ import { authService } from '@/app/modules/auth/services/auth.service';
 import { loginSchema } from '@/app/modules/auth/utils/auth.validation';
 import { NextRequest, NextResponse } from 'next/server';
 
-// /**
-//  * @swagger
-//  * /api/auth/login:
-//  *   post:
-//  *     summary: Authentification utilisateur
-//  *     description: Permet à un utilisateur de s'authentifier avec son email et son mot de passe
-//  *     tags:
-//  *       - Authentification
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             $ref: '#/components/schemas/LoginRequest'
-//  *     responses:
-//  *       200:
-//  *         description: Authentification réussie
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               $ref: '#/components/schemas/AuthResponse'
-//  *       400:
-//  *         description: Données d'entrée invalides
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 message:
-//  *                   type: string
-//  *                 errors:
-//  *                   type: object
-//  *       401:
-//  *         description: Identifiants invalides
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               $ref: '#/components/schemas/AuthError'
-//  *       500:
-//  *         description: Erreur serveur
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 message:
-//  *                   type: string
-//  *                 error:
-//  *                   type: object
-//  */
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Authentification utilisateur
+ *     description: Permet à un utilisateur de s'authentifier avec son email et son mot de passe
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: Authentification réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         description: Données d'entrée invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 errors:
+ *                   type: object
+ *       401:
+ *         description: Identifiants invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: object
+ */
 export async function POST(request: NextRequest) {
   try {
     // Récupérer le body de la requête

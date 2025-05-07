@@ -32,6 +32,9 @@ export class AuthService {
       { expiresIn: '7d' }  // Token valide pour 7 jours
     );
   }
+    /**
+   * Authentifie un utilisateur en utilisant son email et mot de passe
+   */
   async login(credentials: LoginUserDTO): Promise<AuthResponse | AuthError> {
     try {
       // Trouver l'utilisateur par email
@@ -125,66 +128,6 @@ export class AuthService {
         };
       }
     }
-  /**
-   * Authentifie un utilisateur en utilisant son email et mot de passe
-   */
-  // async login(credentials: LoginUserDTO): Promise<AuthResponse | AuthError> {
-  //   try {
-  //     // Trouver l'utilisateur par email
-  //     const user = await prisma.user.findUnique({
-  //       where: { email: credentials.email },
-  //     });
-
-  //     if (!user) {
-  //       return {
-  //         message: "Email ou mot de passe incorrect",
-  //         code: "INVALID_CREDENTIALS"
-  //       };
-  //     }
-
-  //     // Vérifier le mot de passe
-  //     const passwordValid = await compare(credentials.password, user.password || '');
-  //     if (!passwordValid) {
-  //       return {
-  //         message: "Email ou mot de passe incorrect",
-  //         code: "INVALID_CREDENTIALS"
-  //       };
-  //     }
-
-  //     // Générer le token JWT
-  //     const token = this.generateToken(user);
-
-  //     // Retourner l'utilisateur sans le mot de passe
-  //     const { password: _, ...userWithoutPassword } = user;
-  //     return {
-  //       user: userWithoutPassword,
-  //       token,
-  //     };
-  //   } catch (error: unknown) {
-  //     console.error('Erreur lors de la connexion:', error);
-  //     return {
-  //       message: "Erreur lors de la connexion",
-  //       code: "LOGIN_ERROR"
-  //     };
-  //   }
-  // }
-
-  /**
-   * Génère un token JWT contenant les informations de l'utilisateur
-   */
-  // private generateToken(user: User): string {
-  //   const payload: JWTPayload = {
-  //     id: user.id,
-  //     email: user.email || '',
-  //     name: user.name,
-  //     role: user.role,
-  //     isFirstLogin: user.isFirstLogin || false,
-  //   };
-
-  //   const secret: Secret = process.env.JWT_SECRET || 'fallback-secret';
-  //   return sign(payload, secret, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
-  // }
-
 
   async register(data: RegisterUserDTO): Promise<{ message: string, success: boolean, user: Pick<User, 'id'> } | AuthError> {
     try {
