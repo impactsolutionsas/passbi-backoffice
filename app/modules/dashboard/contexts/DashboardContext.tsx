@@ -1,8 +1,11 @@
 'use client';
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { Vehicle, Trip, Stats, DashboardContextType, UserWithId as TypedUserWithId } from '../types';
+import { UserWithId as TypedUserWithId, Vehicle as LocalVehicle, Trip as LocalTrip } from '../types';
 import { useUser } from '../components/features/users/hooks/useUser';
+import { DashboardContextType, Stats } from '../components/dashboardContextType/dashboardContextType';
+import { Vehicle as PrismaVehicle, Trip as PrismaTrip } from '@prisma/client';
+import { useOperator } from '../components/features/operatorInterUrbain/hooks/useOperator';
 
 const defaultStats: Stats = {
     utilisateurs: { total: 0, augmentation: '0%' },
@@ -17,8 +20,9 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [activeTab, setActiveTab] = useState('accueil');
     const { users, setUsers, fetchUsers } = useUser();
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-    const [trips, setTrips] = useState<Trip[]>([]);
+    const { operators, fetchOperators } = useOperator();
+    const [vehicles, setVehicles] = useState<PrismaVehicle[]>([]);
+    const [trips, setTrips] = useState<PrismaTrip[]>([]);
     const [stats, setStats] = useState<Stats>(defaultStats);
     const [searchTerm, setSearchTerm] = useState('');
     const [showUserForm, setShowUserForm] = useState(false);
@@ -28,10 +32,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Charger les données initiales
     useEffect(() => {
         fetchUsers();
+        fetchOperators();
         
         // Chargez vos données à partir d'une API ici pour les véhicules et les trajets
         // Exemple: fetchVehicles().then(data => setVehicles(data));
-    }, [fetchUsers]);
+    }, [fetchUsers, fetchOperators]);
 
     // Mettre à jour les statistiques en fonction des données
     useEffect(() => {
@@ -53,7 +58,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
                 augmentation: users.length > 0 ? '15%' : '0%' 
             }
         });
-    }, [users, vehicles, trips]);
+    }, [users, vehicles, trips, operators]);
 
     // Valeur du contexte
     const contextValue: DashboardContextType = {

@@ -56,39 +56,39 @@ async function authenticate(request: NextRequest) {
   }
 }
 
-/**
- * @swagger
- * /api/users/{id}:
- *   get:
- *     summary: Récupérer un utilisateur par ID
- *     description: Renvoie les détails d'un utilisateur spécifique
- *     tags:
- *       - Utilisateurs
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur
- *     responses:
- *       200:
- *         description: Détails de l'utilisateur
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       401:
- *         description: Non authentifié
- *       403:
- *         description: Non autorisé
- *       404:
- *         description: Utilisateur non trouvé
- *       500:
- *         description: Erreur serveur
- */
+  /**
+   * @swagger
+   * /api/users/{id}:
+   *   get:
+   *     summary: Récupérer un utilisateur par ID
+   *     description: Renvoie les détails d'un utilisateur spécifique
+   *     tags:
+   *       - Utilisateurs
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID de l'utilisateur
+   *     responses:
+   *       200:
+   *         description: Détails de l'utilisateur
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/User'
+   *       401:
+   *         description: Non authentifié
+   *       403:
+   *         description: Non autorisé
+   *       404:
+   *         description: Utilisateur non trouvé
+   *       500:
+   *         description: Erreur serveur
+   */
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

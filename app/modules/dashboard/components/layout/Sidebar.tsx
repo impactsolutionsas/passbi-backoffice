@@ -156,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ handleLogout }) => {
                             </div>
                             <div
                                 className={`py-2 cursor-pointer hover:bg-gray-800 ${activeTab === 'ajout-operateur' ? 'bg-blue-600' : ''}`}
-                                onClick={() => setActiveTab('ajout-operateur')}
+                                onClick={() => setActiveTab('operateurInterUrbain')}
                             >
                                 Ajout Opérateur
                             </div>
